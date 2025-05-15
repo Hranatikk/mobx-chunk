@@ -113,7 +113,7 @@ export const LoginForm = () => {
   return (
     <>
       <button onClick={() => login('alice', 'secret')}>
-        {authStore.login.isLoading ? 'Logging in…' : 'Login'}
+        {authStore.isLoading.login ? 'Logging in…' : 'Login'}
       </button>
       <button onClick={logout}>Logout</button>
     </>
@@ -130,7 +130,7 @@ import { useComputed } from 'mobx-chunk'
 import { authStore } from '../stores/auth'
 
 export const Status = () => {
-  const loading = useComputed(() => authStore.login.isLoading)
+  const loading = useComputed(() => authStore.isLoading.login)
   const ready = useComputed(() => authStore.isLoggedIn())
 
   return (
