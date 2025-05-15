@@ -1,0 +1,48 @@
+{
+    "name": "mobx-chunk",
+    "version": "1.0.0",
+    "description": "Composable MobX store factory and React hooks",
+    "main": "dist/index.cjs.js",
+    "module": "dist/index.esm.js",
+    "types": "dist/index.d.ts",
+    "files": [
+        "dist"
+    ],
+    "scripts": {
+        "build": "rollup -c --bundleConfigAsCjs",
+        "clean": "rimraf dist",
+        "lint": "eslint src --ext .ts,.tsx"
+    },
+    "peerDependencies": {
+        "mobx": "^6.0.0",
+        "react": "^17.0.0 || ^18.0.0"
+    },
+    "devDependencies": {
+        "@rollup/plugin-terser": "^0.4.4",
+        "@types/react": "^19.1.4",
+        "eslint": "^8.0.0",
+        "mobx": "^6.13.7",
+        "react": "^18.1.0",
+        "rimraf": "^3.0.0",
+        "rollup": "^3.0.0",
+        "rollup-plugin-typescript2": "^0.31.0",
+        "typescript": "^4.5.0"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Hranatikk/mobx-chunk.git"
+    },
+    "homepage": "https://github.com/Hranatikk/mobx-chunk",
+    "bugs": {
+        "url": "https://github.com/Hranatikk/react-calendar-resource/issues"
+    },
+    "license": "MIT",
+    "keywords": [
+        "mobx",
+        "react",
+        "hooks",
+        "store",
+        "chunk"
+    ],
+    "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
+}
