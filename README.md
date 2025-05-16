@@ -84,7 +84,6 @@ export type AuthStore = typeof authStore
 Subscribe to multiple values (primitives or computed):
 
 ```tsx
-import { observer } from 'mobx-react-lite'
 import { useValues } from 'mobx-chunk'
 import { authStore } from '../stores/auth'
 
@@ -103,7 +102,6 @@ export const Profile = () => {
 Extract all store methods for easy invocation:
 
 ```tsx
-import { observer } from 'mobx-react-lite'
 import { useActions } from 'mobx-chunk'
 import { authStore } from '../stores/auth'
 
