@@ -28,8 +28,6 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          editUrl:
-            'https://github.com/hranatikk/mobx-chunk',
         },
         theme: {
           customCss: './src/css/custom.css',

@@ -23,12 +23,11 @@ const Hero: React.FC = () => {
     <section className={styles.hero}>
       <div className={styles.inner}>
         <h1 className={styles.title}>
-          Make&nbsp;your&nbsp;components<br/>more&nbsp;interactable
+        Chunk Your State<br/>Simplify Your App
         </h1>
 
         <p className={styles.subtitle}>
-          A performant, easy to use <strong>hold&nbsp;to&nbsp;open context menu</strong>{' '}
-          for React&nbsp;Native powered by Reanimated.
+          Compose reactive MobX “chunks” effortlessly: actions, async flags, computed views, hooks and pluggable persistence—all in one.
         </p>
 
         <div className={styles.actions}>
