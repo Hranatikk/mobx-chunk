@@ -1,6 +1,6 @@
 {
     "name": "mobx-chunk",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "Composable MobX store factory and React hooks",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
@@ -32,7 +32,7 @@
         "type": "git",
         "url": "https://github.com/Hranatikk/mobx-chunk.git"
     },
-    "homepage": "https://github.com/Hranatikk/mobx-chunk",
+    "homepage": "https://hranatikk.github.io/mobx-chunk/",
     "bugs": {
         "url": "https://github.com/Hranatikk/react-calendar-resource/issues"
     },
