@@ -1,0 +1,78 @@
+.hero {
+  padding: 6rem 1rem;
+  display: flex;
+  justify-content: center;
+  text-align: left;
+}
+
+.inner {
+  max-width: 640px;
+  width: 100%;
+}
+
+.title {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ifm-heading-color);
+}
+
+.subtitle {
+  margin: 1.5rem 0 0;
+  font-size: 1.2rem;
+  color: var(--ifm-color-content-secondary);
+}
+
+.actions {
+  margin-top: 2.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+.installBlock {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  padding-right: 2.5rem;
+  border-radius: var(--ifm-pre-border-radius);
+  background: var(--ifm-color-emphasis-100);
+}
+
+.installText {
+  padding: 0.85rem 1.1rem;
+  font-family: var(--ifm-font-family-monospace);
+  font-size: 0.9rem;
+  user-select: all;
+  color: var(--ifm-color-content);
+}
+
+.copyBtn {
+  position: absolute;
+  right: 0.35rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+}
+
+.copyBtn svg {
+  width: 1rem;
+  height: 1rem;
+  fill: var(--ifm-color-content-secondary);
+  transition: fill 150ms ease;
+}
+
+.copyBtn:hover svg,
+.copyBtn:focus-visible svg {
+  fill: var(--ifm-color-primary);
+}
