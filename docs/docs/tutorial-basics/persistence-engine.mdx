@@ -1,0 +1,95 @@
+---
+sidebar_position: 4
+---
+
+# Persistence engine
+
+`configurePersistenceEngine` lets you plug **any** storage layer—localStorage, AsyncStorage, MMKV, IndexedDB, secure vaults—into **mobx-chunk**.  
+Once configured, every chunk that opts in will transparently hydrate on start-up and persist after each state change.
+
+---
+
+## How it works
+1. **Adapter contract** – You supply an object with `setItem`, `getItem`, and `removeItem` methods (all return Promises or sync values).  
+2. **Global registration** – Call `configurePersistenceEngine(adapter, options?)` once at app start.  
+3. **Chunk opt-in** – Each chunk chooses whether to persist and which key to use.  
+4. **Lifecycle** – On app launch the store is hydrated; after every action/flow a snapshot is serialised and saved.
+
+---
+
+## When to use it
+- Need a storage backend other than the default (AsyncStorage / localStorage).  
+- Require **encryption**, **compression**, or **custom serialisation** before data hits disk.  
+- Persist state across browser tabs, native sessions, or server restarts.  
+
+---
+
+## Example of usage
+
+```
+//  At App.tsx
+import { configurePersistenceEngine } from "mobx-chunk"
+
+configurePersistenceEngine({
+  get: (key) => localStorage.getItem(key),
+  remove: (key) => localStorage.removeItem(key),
+  set: (key, value) => localStorage.setItem(key, value),
+  clear: () => localStorage.clear(),
+})
+
+```
+
+:::tip You can use both sync and async storages
+
+Example below shows usage with `MMKV` in React Native
+
+:::
+
+```
+//  At App.tsx
+import { configurePersistenceEngine } from "mobx-chunk"
+import { MMKV } from "react-native-mmkv"
+
+const storage = new MMKV()
+
+configurePersistenceEngine({
+  get: (key) => storage.getString(key),
+  remove: (key) => storage.delete(key),
+  set: (key, value) => storage.set(key, value),
+  clear: () => storage.clearAll(),
+})
+
+```
+
+---
+
+## API
+| Argument | Type | Description |
+|----------|------|-------------|
+| `adapter` | `{ set, get, remove, clear }` | Object implementing the minimal storage contract. |
+
+**Storage contract**
+
+| Method | Signature | Purpose |
+|--------|-----------|---------|
+| `set` | `(key: string, value: string) => Promise<void> \| void` | Save snapshot string. |
+| `get` | `(key: string) => Promise<string \| null> \| string \| null` | Retrieve stored snapshot. |
+| `remove` | `(key: string) => Promise<void> \| void` | Delete snapshot by key. |
+| `clear` | `() => Promise<void> \| void` | Clear all data |
+
+---
+
+## Lifecycle & migrations
+| Phase | Behaviour |
+|-------|-----------|
+| **Hydration** | At chunk creation, snapshot is loaded and deserialised (if present). |
+| **Mutation** | After each action/flow, the new snapshot is serialised and persisted. |
+
+---
+
+## Best practices
+- Keep snapshots small: persist only necessary fields via a whitelist, or store references/IDs instead of entire objects.  
+- Encrypt sensitive data **before** calling `setItem`; `configurePersistenceEngine` stays agnostic about security.  
+- Use a **namespace** prefix to avoid key collisions when multiple apps share the same storage backend.  
+
+`configurePersistenceEngine` decouples persistence concerns from business logic, letting each chunk decide **what** to store while you decide **where** and **how** to store it.

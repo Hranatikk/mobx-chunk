@@ -165,13 +165,13 @@ export const DashboardWithStore = withStore(Dashboard, authStore)
 Plug in your own engine (AsyncStorage, localStorage, MMKV, etc.) once at app init:
 
 ```ts
-import { configurePersistenceEngine } from 'mobx-chunk/persist'
+import { configurePersistenceEngine } from 'mobx-chunk'
 
 const engine = {
   async get(key) { /*…*/ },
   async set(key, val) { /*…*/ },
   async remove(key) { /*…*/ },
-  async clear(ns) { /*…*/ }
+  async clear() { /*…*/ }
 }
 
 configurePersistenceEngine({ engine })
@@ -186,7 +186,7 @@ Each chunk with `persist: [...]` will automatically hydrate on creation and reac
 Log or transform actions globally:
 
 ```ts
-import { addActionInterceptor } from 'mobx-chunk/middleware'
+import { addActionInterceptor } from 'mobx-chunk'
 
 addActionInterceptor(({ chunkName, actionName, args }, next) => {
   console.debug(`[${chunkName}] ${actionName}`, args)
