@@ -64,7 +64,7 @@ const config: Config = {
       ],
     },
     footer: {
-      style: 'dark',
+      // style: 'dark',
       copyright: `Copyright © ${new Date().getFullYear()} Gleb Skripinsky. Built with Docusaurus.`,
     },
     prism: {
