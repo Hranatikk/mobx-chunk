@@ -1,4 +1,4 @@
-import { makeObservable, observable } from "mobx"
+import { IObservableFactory, makeObservable, observable } from "mobx"
 import type { ChunkConfig } from "../types/chunk"
 import type { RecordWithAnyFn } from "../types/common"
 
@@ -23,7 +23,7 @@ export function createLoadingAnnotations<
     Object.keys(async).map((name) => [name, false])
   ) as Record<keyof TAsync, boolean>
 
-  const annotations = {}
+  const annotations = {} as Record<string, IObservableFactory>
   Object.keys(async).forEach((name) => {
     annotations[name] = observable
   })
