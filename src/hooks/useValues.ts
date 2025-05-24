@@ -38,7 +38,6 @@ export function useValues<G extends Record<string, (() => any) | any>>(
           ])
         ) as Values,
       (current, previous) => {
-        // Update only when values actually changed
         if (!previous || JSON.stringify(current) !== JSON.stringify(previous)) {
           setValues(current)
         }
