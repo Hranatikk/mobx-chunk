@@ -32,9 +32,16 @@ export type StoreInstance<
   TActions extends RecordWithAnyFn,
   TAsync extends RecordWithAnyFn,
   TSelectors extends RecordWithAnyFn,
-> = TState &
-  TActions &
-  TAsync &
-  TSelectors & {
-    isLoading: Record<keyof TAsync, boolean>
-  }
+> = {
+  actions: Actions<TState, TActions>
+  asyncActions: TAsync
+  selectors: Selectors<TState, TSelectors>
+  isLoading: Record<keyof TAsync, boolean>
+}
+
+type Actions<S extends RecordWithAny, T> = T & {
+  [K in keyof S as `set${Capitalize<string & K>}`]: (value: S[K]) => void
+}
+type Selectors<S extends RecordWithAny, T> = T & {
+  [K in keyof S as `get${Capitalize<string & K>}`]: () => S[K]
+}

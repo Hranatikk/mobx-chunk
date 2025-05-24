@@ -6,13 +6,12 @@ import type { ChunkConfig } from "../types/chunk"
  * Setup persistence for specified state keys in a chunk config.
  * Uses the globally configured PersistenceEngine, supporting async operations.
  *
- * @template TState - Shape of the state object.
- * @param config - The chunk configuration with `persist` keys.
- * @param self - The store instance whose state will be observed for persistence.
+ * @param config — Initial chunk config
+ * @param self — Store instance
  */
-export function setupPersistence<TState extends Record<string, unknown>>(
-  config: ChunkConfig<TState, any, any, any>,
-  self: TState & Record<string, unknown>
+export function setupPersistence<Self extends object>(
+  config: ChunkConfig<Self, any, any, any>,
+  self: Self
 ) {
   if (!config.persist?.length) return
 

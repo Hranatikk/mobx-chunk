@@ -11,7 +11,7 @@ import type { AnyFn, RecordWithAnyFn } from "../types/common"
  * @param config — Initial chunk config
  * @returns actions Object
  */
-export function createASyncActions<
+export function createAsyncActions<
   TState extends Record<string, any>,
   TAsync extends RecordWithAnyFn,
 >(
