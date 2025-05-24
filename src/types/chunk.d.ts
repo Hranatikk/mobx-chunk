@@ -42,6 +42,8 @@ export type StoreInstance<
 type Actions<S extends RecordWithAny, T> = T & {
   [K in keyof S as `set${Capitalize<string & K>}`]: (value: S[K]) => void
 }
-type Selectors<S extends RecordWithAny, T> = T & {
-  [K in keyof S as `get${Capitalize<string & K>}`]: () => S[K]
+type Selectors<S extends RecordWithAny, T> = {
+  [K in keyof S as `get${Capitalize<string & K>}`]: S[K]
+} & {
+  [K in keyof T]: ReturnType<T[K]>
 }

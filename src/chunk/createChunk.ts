@@ -1,11 +1,10 @@
-import { makeObservable } from "mobx"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
 import type { RecordWithAny, RecordWithAnyFn } from "../types/common"
-import { generateAnnotations } from "./annotations"
 import { createActions } from "./createActions"
 import { createAsyncActions } from "./createAsyncActions"
 import { createLoadingAnnotations } from "./createLoadingAnnotations"
 import { createSelectors } from "./createSelectors"
+import { createStateAnnotations } from "./createStateAnnotations"
 import { setupPersistence } from "./persist"
 import { rehydrateChunkState } from "./rehydration"
 
@@ -38,8 +37,11 @@ export function createChunk<
         TSelectors
       >
 
-      const initialState = config.initialState
-      Object.assign(self, initialState)
+      /**
+       * Generate default state
+       */
+      Object.assign(self, config.initialState)
+      createStateAnnotations(self, config)
 
       /**
        * Create setters and join them with custom actions
@@ -69,7 +71,7 @@ export function createChunk<
       const isLoading = createLoadingAnnotations(self, config)
       Object.defineProperty(self, "isLoading", {
         configurable: true,
-        enumerable: true,
+        enumerable: false,
         value: isLoading,
         writable: true,
       })
@@ -85,9 +87,6 @@ export function createChunk<
         writable: true,
       })
 
-      const annotations = generateAnnotations(config)
-
-      makeObservable(self, annotations)
       rehydrateChunkState(config, self as any)
       setupPersistence(config, self as any)
     }
