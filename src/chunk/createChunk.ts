@@ -1,9 +1,11 @@
-import { flow, makeObservable, observable, runInAction } from "mobx"
-import { runActionInterceptors } from "../adapters/middlewareAdapter"
+import { makeObservable } from "mobx"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
-import type { AnyFn, RecordWithAny, RecordWithAnyFn } from "../types/common"
-import { capitalize } from "../utils/capitalize"
+import type { RecordWithAny, RecordWithAnyFn } from "../types/common"
 import { generateAnnotations } from "./annotations"
+import { createActions } from "./createActions"
+import { createASyncActions } from "./createAsyncActions"
+import { createLoadingAnnotations } from "./createLoadingAnnotations"
+import { createSelectors } from "./createSelectors"
 import { setupPersistence } from "./persist"
 import { rehydrateChunkState } from "./rehydration"
 
@@ -14,7 +16,7 @@ import { rehydrateChunkState } from "./rehydration"
  * @template TState - Shape of the state object.
  * @template TActions - Synchronous action methods.
  * @template TAsync - Asynchronous (flow) methods.
- * @template TViews - Computed view methods.
+ * @template TSelectors - Computed view methods.
  *
  * @param config - Configuration defining state, actions, async, views, and persistence.
  * @returns A new store instance with hydrated or default state.
@@ -23,103 +25,67 @@ export function createChunk<
   TState extends RecordWithAny,
   TActions extends RecordWithAnyFn = {},
   TAsync extends RecordWithAnyFn = {},
-  TViews extends RecordWithAnyFn = {},
+  TSelectors extends RecordWithAnyFn = {},
 >(
-  config: ChunkConfig<TState, TActions, TAsync, TViews>
-): StoreInstance<TState, TActions, TAsync, TViews> {
+  config: ChunkConfig<TState, TActions, TAsync, TSelectors>
+): StoreInstance<TState, TActions, TAsync, TSelectors> {
   class Store {
     constructor() {
       const self = this as unknown as StoreInstance<
         TState,
         TActions,
         TAsync,
-        TViews
+        TSelectors
       >
 
-      Object.assign(self, config.initialState)
+      const initialState = config.initialState
+      Object.assign(self, initialState)
 
-      Object.keys(config.initialState).forEach((key) => {
-        const cap = capitalize(key)
-        Object.defineProperty(self, `set${cap}`, {
-          configurable: true,
-          enumerable: false,
-          value: (v: any) => {
-            ;(self as any)[key] = v
-          },
-          writable: true,
-        })
+      /**
+       * Create setters and join them with custom actions
+       */
+      const actions = createActions(self, config)
+      Object.defineProperty(self, "actions", {
+        configurable: true,
+        enumerable: false,
+        value: actions,
+        writable: true,
       })
 
-      const sync = config.actions?.(self) ?? ({} as RecordWithAnyFn)
-      const async = config.asyncActions?.(self) ?? ({} as RecordWithAnyFn)
-
-      const initialLoading = Object.fromEntries(
-        Object.keys(async).map((name) => [name, false])
-      ) as Record<keyof TAsync, boolean>
-      self.isLoading = initialLoading as Record<keyof TAsync, boolean>
-
-      const loadingAnnotations: Record<string, any> = {}
-      Object.keys(async).forEach((name) => {
-        loadingAnnotations[name] = observable
-      })
-      makeObservable(self.isLoading, loadingAnnotations)
-
-      Object.entries({ ...sync, ...async }).forEach(([name, fn]) => {
-        const original =
-          fn.constructor.name === "GeneratorFunction"
-            ? flow((fn as any).bind(self) as any)
-            : (fn as AnyFn).bind(self)
-
-        const wrapped = (...args: unknown[]) => {
-          if (name in async) {
-            runInAction(() => {
-              self.isLoading[name as keyof TAsync] = true
-            })
-          }
-
-          const res = runActionInterceptors(
-            { actionName: name, args, chunkName: config.name, store: self },
-            () => original(...args)
-          )
-
-          if (name in async) {
-            Promise.resolve(res).finally(() =>
-              runInAction(() => {
-                self.isLoading[name as keyof TAsync] = false
-              })
-            )
-          }
-
-          return res
-        }
-
-        Object.defineProperty(self, name, {
-          configurable: true,
-          enumerable: false,
-          value: wrapped,
-          writable: true,
-        })
+      /**
+       * Create getters and join them with custom selectors
+       */
+      const selectors = createSelectors(self, config)
+      Object.defineProperty(self, "selectors", {
+        configurable: true,
+        enumerable: false,
+        value: selectors,
+        writable: true,
       })
 
-      if (config.views) {
-        const viewsObj = config.views(self)
-        Object.entries(viewsObj).forEach(([name, fn]) => {
-          Object.defineProperty(self, name, {
-            configurable: true,
-            enumerable: false,
-            get: fn.bind(self),
-          })
-        })
-      }
+      /**
+       * Generate isLoading keys for async functions
+       */
+      const isLoading = createLoadingAnnotations(self, config)
+      Object.defineProperty(self, "isLoading", {
+        configurable: true,
+        enumerable: true,
+        value: isLoading,
+        writable: true,
+      })
 
-      const annotations = generateAnnotations(
-        config,
-        sync,
-        async,
-        config.views ? config.views(self) : undefined
-      )
+      /**
+       * Create async functions wrapper
+       */
+      const asyncActions = createASyncActions(self, config)
+      Object.defineProperty(self, "asyncActions", {
+        configurable: true,
+        enumerable: false,
+        value: asyncActions,
+        writable: true,
+      })
 
-      annotations.isLoading = observable
+      const annotations = generateAnnotations(config)
 
       makeObservable(self, annotations)
       rehydrateChunkState(config, self)
@@ -127,5 +93,5 @@ export function createChunk<
     }
   }
 
-  return new Store() as StoreInstance<TState, TActions, TAsync, TViews>
+  return new Store() as StoreInstance<TState, TActions, TAsync, TSelectors>
 }
