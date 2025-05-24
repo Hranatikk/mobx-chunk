@@ -1,3 +1,4 @@
+/* eslint-disable no-extra-semi */
 import { runInAction } from "mobx"
 import { getPersistenceEngine } from "../adapters/storageAdapter"
 import type { ChunkConfig } from "../types/chunk"
@@ -6,13 +7,12 @@ import type { ChunkConfig } from "../types/chunk"
  * Rehydrate a store's state from the configured persistence engine.
  * Supports both sync and async get() implementations.
  *
- * @template TState - Shape of the state object.
- * @param {ChunkConfig<TState, any, any, any>} config - The chunk configuration with `persist` keys.
- * @param {TState & Record<string, unknown>} self - The store instance to hydrate.
+ * @param config — Initial chunk config
+ * @param self — Store instance
  */
-export function rehydrateChunkState<TState extends Record<string, unknown>>(
-  config: ChunkConfig<TState, any, any, any>,
-  self: TState & Record<string, unknown>
+export function rehydrateChunkState<Self extends object>(
+  config: ChunkConfig<Self, any, any, any>,
+  self: Self
 ) {
   try {
     const engine = getPersistenceEngine()

@@ -3,7 +3,7 @@ import type { ChunkConfig, StoreInstance } from "../types/chunk"
 import type { RecordWithAny, RecordWithAnyFn } from "../types/common"
 import { generateAnnotations } from "./annotations"
 import { createActions } from "./createActions"
-import { createASyncActions } from "./createAsyncActions"
+import { createAsyncActions } from "./createAsyncActions"
 import { createLoadingAnnotations } from "./createLoadingAnnotations"
 import { createSelectors } from "./createSelectors"
 import { setupPersistence } from "./persist"
@@ -77,7 +77,7 @@ export function createChunk<
       /**
        * Create async functions wrapper
        */
-      const asyncActions = createASyncActions(self, config)
+      const asyncActions = createAsyncActions(self, config)
       Object.defineProperty(self, "asyncActions", {
         configurable: true,
         enumerable: false,
@@ -88,7 +88,7 @@ export function createChunk<
       const annotations = generateAnnotations(config)
 
       makeObservable(self, annotations)
-      rehydrateChunkState(config, self)
+      rehydrateChunkState(config, self as any)
       setupPersistence(config, self as any)
     }
   }

@@ -1,4 +1,5 @@
-import { IObservableFactory, makeObservable, observable } from "mobx"
+import type { IObservableFactory } from "mobx"
+import { makeObservable, observable } from "mobx"
 import type { ChunkConfig } from "../types/chunk"
 import type { RecordWithAnyFn } from "../types/common"
 

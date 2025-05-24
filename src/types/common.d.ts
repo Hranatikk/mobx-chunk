@@ -3,4 +3,4 @@
  */
 export type AnyFn = (...args: any[]) => any
 export type RecordWithAnyFn = Record<string, AnyFn>
-export type RecordWithAny = Record<string, unknown>
+export type RecordWithAny = Record<string, any>
