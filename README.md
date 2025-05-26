@@ -1,115 +1,166 @@
-# 🏷️ mobx-chunk
+# mobx-chunk
 
-View online: https://hranatikk.github.io/mobx-chunk/docs/intro
+[![npm version](https://img.shields.io/npm/v/mobx-chunk.svg)](https://www.npmjs.com/package/mobx-chunk) [![Downloads](https://img.shields.io/npm/dm/mobx-chunk.svg)](https://www.npmjs.com/package/mobx-chunk)
 
-Composable, type-safe MobX store factory and React hooks for easy state management.
+A lightweight, type-safe factory for building MobX-powered state slices ("chunks") with auto-generated actions, selectors, async flows, loading flags, and optional persistence.
 
----
+[Full Documentation](https://hranatikk.github.io/mobx-chunk/)
 
-## 📦 Installation
+## Features
+
+* **Automatic Actions & Selectors**: Generates `set${ValueKey}` actions and `get${ValueKey}` selectors for each state field.
+* **Async Actions & Loading Flags**: Define asynchronous flows with `store.asyncActions` and track them via `store.isLoading` flags.
+* **Type Safety**: Fully typed stores, actions, and selectors using TypeScript inference.
+* **Persistence**: Plug in any storage engine (MMKV, AsyncStorage, localStorage) to persist specific fields.
+* **React Integration**: React hooks (`useValues`, `useComputed`) and HOC (`withStore`) for seamless UI updates.
+
+## Installation
 
 ```bash
+# with npm
 npm install mobx-chunk
-# or
+
+# with yarn
 yarn add mobx-chunk
 ```
 
----
+## Quick Start
 
-## 🚀 Quick Start
-
-### 1. createChunk
+### Basic Example
 
 ```ts
-import { createChunk } from 'mobx-chunk'
-import { runInAction } from 'mobx'
+// store.ts
+import { createChunk } from "mobx-chunk";
 
-const authStore = createChunk({
-  name: 'auth',
-  initialState: { token: '' },
-  actions: self => ({
-    logout() { self.token = '' },
-  }),
-  asyncActions: self => ({
-    async login(user, pass) {
-      const res = await fetch('/auth', { method: 'POST', body: JSON.stringify({ user, pass }) })
-      const { token } = await res.json()
-      runInAction(() => { self.token = token })
-    }
-  }),
-  views: self => ({
-    isLoggedIn: () => !!self.token
-  }),
-  persist: ['token']
-})
+export type TState = { accessToken: string };
+export const store = createChunk<TState>({
+  name: "store",
+  initialState: { accessToken: "" } satisfies TState,
+  persist: ["accessToken"],
+});
+
+// App.tsx
+import React from "react";
+import { View, Text } from "react-native";
+import { useValues } from "mobx-chunk";
+import { store } from "./store";
+
+export default function App() {
+  const { accessToken } = useValues({
+    accessToken: () => store.selectors.getAccessToken,
+  });
+
+  return (
+    <View>
+      <Text>{accessToken}</Text>
+    </View>
+  );
+}
 ```
 
-### 2. Hooks
+## Create a Chunk
 
-- **useValues**: subscribe to state/computed  
-  ```ts
-  const { token, isLoggedIn } = useValues({
-    token: () => authStore.token,
-  })
-  ```
-- **useActions**: extract methods  
-  ```ts
-  const { login, logout } = useActions(authStore)
-  ```
-- **useComputed**: observe MobX expressions  
-  ```ts
-  const loading = useComputed(() => authStore.isLoading.login)
-  ```
+Define a chunk with custom actions, async flows, and views:
 
-### 3. withStore HOC
+```ts
+import { createChunk } from "mobx-chunk";
+import { actions, type TActions } from "./actions";
+import { asyncActions, type TAsyncActions } from "./asyncActions";
+import { selectors, type TSelectors } from "./selectors";
 
-Wrap a component and instantiate store per lifecycle:
+export type Todo = { id: number; title: string; isComplete: boolean };
+export type TState = { todoList: Todo[] };
+
+export const todoStore = createChunk<
+  TState,
+  TActions,
+  TAsyncActions,
+  TSelectors
+>({
+  name: "todo",
+  initialState: { todoList: [] } satisfies TState,
+  persist: ["todoList"],
+  actions,
+  asyncActions,
+  views: selectors,
+});
+```
+
+## Subscribe to Changes
+
+Use React hooks to reactively subscribe:
 
 ```tsx
-import { withStore } from 'mobx-chunk'
+import { useValues, useComputed } from "mobx-chunk";
+import { todoStore } from "./todo-store";
 
-function Dashboard() {
-  return <div>{authStore.token}</div>
-}
+// Batch subscription
+const { todoList, isLoading } = useValues({
+  todoList: () => todoStore.selectors.getTodoList,
+  isLoading: () => todoStore.isLoading.asyncFunctionExample,
+});
 
-export default withStore(Dashboard, authStore)
+// Single subscription
+const singleList = useComputed(
+  () => todoStore.selectors.getTodoList
+);
 ```
 
----
+## Persistence Setup
 
-## 💾 Persistence Engine
-
-Configure once at app init:
+Configure a storage engine in your app entrypoint:
 
 ```ts
-import { configurePersistenceEngine } from 'mobx-chunk'
+import { configurePersistenceEngine } from "mobx-chunk";
+import { MMKV } from "react-native-mmkv";
 
+const storage = new MMKV();
 configurePersistenceEngine({
-  get: (key) => /*…*/,
-  remove: (key) => /*…*/,
-  set: (key, value) => /*…*/,
-  clear: () => /*…*/,
-})
+  clear: () => storage.clearAll(),
+  get:    (key) => storage.getString(key),
+  remove: (key) => storage.delete(key),
+  set:    (key, value) => storage.set(key, value),
+});
 ```
 
-Chunks with `persist` fields hydrate on start and auto-save.
+Supports synchronous or asynchronous APIs (e.g., AsyncStorage or browser localStorage).
 
----
+## Middleware (Interceptors)
 
-## ⚙️ Middleware
-
-Register global interceptors:
+Add global interceptors for validation, logging, or metrics:
 
 ```ts
-import { addActionInterceptor } from 'mobx-chunk'
+import { addActionInterceptor } from "mobx-chunk";
 
 addActionInterceptor((ctx, next) => {
-  // Your logic goes here
-})
+  // ctx.chunkName, ctx.actionName, ctx.args
+  if (ctx.actionName === "yourAction") {
+    // validate or log
+  }
+  return next();
+});
 ```
 
----
+> **Coming Soon:** Separate interceptors for general actions, async actions, and sync actions.
 
-## 📄 License
+## `withStore` HOC
 
-MIT
+Instantiate a local store per component and auto-dispose on unmount:
+
+```tsx
+import { withStore, useValues } from "mobx-chunk";
+import { localStore } from "./localStore";
+
+function Container() {
+  const { value } = useValues({
+    value: () => localStore.selectors.getValue,
+  });
+  return <>{value}</>;
+}
+
+export default withStore(Container, localStore);
+```
+
+## License
+
+This project is licensed under the MIT License.
