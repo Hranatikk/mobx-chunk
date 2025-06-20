@@ -37,10 +37,8 @@ export function useValues<G extends Record<string, (() => any) | any>>(
             typeof getter === "function" ? (getter as () => any)() : getter,
           ])
         ) as Values,
-      (current, previous) => {
-        if (!previous || JSON.stringify(current) !== JSON.stringify(previous)) {
-          setValues(current)
-        }
+      (current) => {
+        setValues(current)
       }
     )
 
