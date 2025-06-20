@@ -15,10 +15,13 @@ export function rehydrateChunkState<Self extends object>(
   self: Self
 ) {
   try {
+    if (!config.persist?.length) return
+
     const engine = getPersistenceEngine()
     if (!engine.get) return
 
-    const rawOrPromise = engine.get(config.name)
+    const rawOrPromise = engine.get(`${config.name}Store`)
+
     const hydrate = (raw: string | null) => {
       if (!raw) return
       let storeObj: Record<string, string>
@@ -27,8 +30,11 @@ export function rehydrateChunkState<Self extends object>(
       } catch {
         return
       }
+
       runInAction(() => {
         Object.entries(storeObj).forEach(([key, val]) => {
+          if (!config.persist?.includes(key as keyof Self)) return
+
           try {
             ;(self as any)[key] = JSON.parse(val)
           } catch {
@@ -41,7 +47,7 @@ export function rehydrateChunkState<Self extends object>(
     if (rawOrPromise instanceof Promise) {
       rawOrPromise.then(hydrate).catch((err) => {
         if (process.env.NODE_ENV !== "production") {
-          console.error(`Hydration error for chunk '${config.name}':`, err)
+          console.error(`Hydration error for chunk '${config.name}Store':`, err)
         }
       })
     } else {
