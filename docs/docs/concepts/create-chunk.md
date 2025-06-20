@@ -17,7 +17,7 @@ The `createChunk` function is the heart of **mobx-chunk**, allowing you to defin
 ## Full Store Definition Example
 
 ```ts
-import { createChunk } from "mobx-chunk";
+import { createChunk, combineAsync } from "mobx-chunk";
 import { actions, type TActions } from "./actions";
 import { asyncActions, type TAsyncActions } from "./asyncActions";
 import { selectors, type TSelectors } from "./selectors";
@@ -122,6 +122,29 @@ export function asyncActions<Store extends TState>(store: Store) {
   };
 }
 export type TAsyncActions = ReturnType<typeof asyncActions>;
+```
+
+### Or define async actions in separated files
+
+
+```ts
+import { combineAsync } from "mobx-chunk";
+import type { TState } from "./chunk";
+
+export const asyncGeneratorExample = (self: TState) => ({
+  *asyncGeneratorExample(payload: { name: string }) {
+    // code goes here
+  },
+})
+
+export const asyncFunctionExample = (self: TState) => ({
+  async asyncFunctionExample(payload: { namer: string }) {
+    // code goes here
+  },
+})
+
+export const asyncActions = combineAsync({ asyncGeneratorExample, asyncFunctionExample })
+export type TAsyncActions = ReturnType<typeof asyncActions>
 ```
 
 With `createChunk`, you get a fully-typed store slice, ready for both simple and complex state management patterns. Copy and adapt these examples to fit your application's needs!

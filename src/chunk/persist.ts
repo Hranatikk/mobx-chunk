@@ -25,10 +25,10 @@ export function setupPersistence<Self extends object>(
         toSave[k as string] = JSON.stringify(vals[i])
       })
       const payload = JSON.stringify(toSave)
-      const result = engine.set(config.name, payload)
+      const result = engine.set(`${config.name}Store`, payload)
       if (result instanceof Promise) {
         result.catch((err) => {
-          console.error(`Persistence set error for ${config.name}:`, err)
+          console.error(`Persistence set error for ${config.name}Store:`, err)
         })
       }
     },
