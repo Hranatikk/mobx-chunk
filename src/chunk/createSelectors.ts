@@ -36,13 +36,22 @@ export function createSelectors<
 
   if (customSelectors) {
     Object.entries(customSelectors).forEach(([name, fn]) => {
-      Object.defineProperty(selectors, name, {
-        configurable: true,
-        enumerable: false,
-        get() {
-          return (fn as AnyFn).call(self)
-        },
-      })
+      if (fn.length <= 0) {
+        Object.defineProperty(selectors, name, {
+          configurable: true,
+          enumerable: false,
+          get() {
+            return (fn as AnyFn).call(self)
+          },
+        })
+      } else {
+        Object.defineProperty(selectors, name, {
+          configurable: true,
+          enumerable: false,
+          value: fn.bind(self),
+          writable: true,
+        })
+      }
     })
   }
 
