@@ -45,5 +45,5 @@ type Actions<S extends RecordWithAny, T> = T & {
 type Selectors<S extends RecordWithAny, T> = {
   [K in keyof S as `get${Capitalize<string & K>}`]: S[K]
 } & {
-  [K in keyof T]: ReturnType<T[K]>
+  [K in keyof T]: T[K] extends () => any ? ReturnType<T[K]> : T[K]
 }
