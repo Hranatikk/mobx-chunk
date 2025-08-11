@@ -1,4 +1,3 @@
-/* eslint-disable no-extra-semi */
 import { runInAction } from "mobx"
 import { getPersistenceEngine } from "../adapters/storageAdapter"
 import type { ChunkConfig } from "../types/chunk"
@@ -15,6 +14,15 @@ export function rehydrateChunkState<Self extends object>(
   self: Self
 ) {
   try {
+    if (!(self as any).__hydrated) {
+      Object.defineProperty(self as any, "__hydrated", {
+        configurable: true,
+        enumerable: false,
+        value: false,
+        writable: true,
+      })
+    }
+
     if (!config.persist?.length) return
 
     const engine = getPersistenceEngine()
@@ -45,17 +53,21 @@ export function rehydrateChunkState<Self extends object>(
     }
 
     if (rawOrPromise instanceof Promise) {
-      rawOrPromise.then(hydrate).catch((err) => {
-        if (process.env.NODE_ENV !== "production") {
+      rawOrPromise
+        .then((raw) => {
+          hydrate(raw)
+          ;(self as any).__hydrated = true
+        })
+        .catch((err) => {
           console.error(`Hydration error for chunk '${config.name}Store':`, err)
-        }
-      })
+          ;(self as any).__hydrated = true
+        })
     } else {
       hydrate(rawOrPromise as string)
+      ;(self as any).__hydrated = true
     }
   } catch (err) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error(`Hydration error ${err}`)
-    }
+    console.error(`Hydration error ${err}`)
+    ;(self as any).__hydrated = true
   }
 }
