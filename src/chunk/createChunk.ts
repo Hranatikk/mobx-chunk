@@ -1,3 +1,4 @@
+import type { IReactionDisposer } from "mobx"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
 import type { RecordWithAny, RecordWithAnyFn } from "../types/common"
 import { createActions } from "./createActions"
@@ -88,7 +89,27 @@ export function createChunk<
       })
 
       rehydrateChunkState(config, self as any)
-      setupPersistence(config, self as any)
+
+      /**
+       * Disposers
+       */
+      const disposers: IReactionDisposer[] = []
+      const persistDisposer = setupPersistence(config, self as any)
+      if (persistDisposer) disposers.push(persistDisposer)
+
+      let disposed = false
+      Object.defineProperty(self, "dispose", {
+        enumerable: false,
+        value: () => {
+          if (disposed) return
+          disposed = true
+          while (disposers.length) {
+            try {
+              disposers.pop()!()
+            } catch {}
+          }
+        },
+      })
     }
   }
 

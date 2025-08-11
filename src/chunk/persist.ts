@@ -1,3 +1,4 @@
+import type { IReactionDisposer } from "mobx"
 import { reaction } from "mobx"
 import { getPersistenceEngine } from "../adapters/storageAdapter"
 import type { ChunkConfig } from "../types/chunk"
@@ -12,13 +13,14 @@ import type { ChunkConfig } from "../types/chunk"
 export function setupPersistence<Self extends object>(
   config: ChunkConfig<Self, any, any, any>,
   self: Self
-) {
-  if (!config.persist?.length) return
+): IReactionDisposer | null {
+  if (!config.persist?.length) return null
 
   const engine = getPersistenceEngine()
+  if (!engine) return null
 
-  reaction(
-    () => config.persist!.map((k) => self[k]),
+  const disposer = reaction(
+    () => config.persist!.map((k) => (self as any)[k]),
     (vals) => {
       const toSave: Record<string, string> = {}
       config.persist!.forEach((k, i) => {
@@ -34,4 +36,6 @@ export function setupPersistence<Self extends object>(
     },
     { fireImmediately: true }
   )
+
+  return disposer
 }
