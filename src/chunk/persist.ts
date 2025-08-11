@@ -22,6 +22,8 @@ export function setupPersistence<Self extends object>(
   const disposer = reaction(
     () => config.persist!.map((k) => (self as any)[k]),
     (vals) => {
+      if (!(self as any).__hydrated) return
+
       const toSave: Record<string, string> = {}
       config.persist!.forEach((k, i) => {
         toSave[k as string] = JSON.stringify(vals[i])
