@@ -36,7 +36,7 @@ export function setupPersistence<Self extends object>(
         })
       }
     },
-    { fireImmediately: true }
+    { delay: 300, fireImmediately: true }
   )
 
   return disposer
