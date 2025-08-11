@@ -12,7 +12,7 @@ A lightweight, type-safe factory for building MobX-powered state slices ("chunks
 * **Async Actions & Loading Flags**: Define asynchronous flows with `store.asyncActions` and track them via `store.isLoading` flags.
 * **Type Safety**: Fully typed stores, actions, and selectors using TypeScript inference.
 * **Persistence**: Plug in any storage engine (MMKV, AsyncStorage, localStorage) to persist specific fields.
-* **React Integration**: React hooks (`useValues`, `useComputed`) and HOC (`withStore`) for seamless UI updates.
+* **React Integration**: React hooks (`useValues`, `useComputed`, `useChunk`) for seamless UI updates.
 
 ## Installation
 
@@ -142,24 +142,6 @@ addActionInterceptor((ctx, next) => {
 ```
 
 > **Coming Soon:** Separate interceptors for general actions, async actions, and sync actions.
-
-## `withStore` HOC
-
-Instantiate a local store per component and auto-dispose on unmount:
-
-```tsx
-import { withStore, useValues } from "mobx-chunk";
-import { localStore } from "./localStore";
-
-function Container() {
-  const { value } = useValues({
-    value: () => localStore.selectors.getValue,
-  });
-  return <>{value}</>;
-}
-
-export default withStore(Container, localStore);
-```
 
 ## License
 

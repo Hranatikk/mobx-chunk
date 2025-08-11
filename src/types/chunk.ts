@@ -35,6 +35,7 @@ export type StoreInstance<
 > = {
   actions: Actions<TState, TActions>
   asyncActions: TAsync
+  dispose: () => void
   selectors: Selectors<TState, TSelectors>
   isLoading: Record<keyof TAsync, boolean>
 }
