@@ -28,9 +28,19 @@ export function createAsyncActions<
         : (fn as AnyFn).bind(self)
 
     const wrapped = (...args: unknown[]) => {
-      runInAction(() => {
-        self.isLoading[name as keyof TAsync] = true
-      })
+      const counters = (self as any).__loadingCounters as
+        | Record<string, number>
+        | undefined
+
+      runActionInterceptors(
+        { actionName: name, args, chunkName: config.name, store: self },
+        () => {}
+      )
+      if (counters) {
+        runInAction(() => {
+          counters[name] = (counters[name] ?? 0) + 1
+        })
+      }
 
       const res = runActionInterceptors(
         { actionName: name, args, chunkName: config.name, store: self },
@@ -39,7 +49,10 @@ export function createAsyncActions<
 
       Promise.resolve(res).finally(() =>
         runInAction(() => {
-          self.isLoading[name as keyof TAsync] = false
+          if (counters) {
+            const next = (counters[name] ?? 1) - 1
+            counters[name] = next > 0 ? next : 0
+          }
         })
       )
 
@@ -55,10 +68,10 @@ export function createAsyncActions<
   })
 
   const annotations = Object.fromEntries(
-    Object.keys(defaultAsyncActions).map((name) => [name, flow])
+    Object.keys(defaultAsyncActions).map((n) => [n, flow])
   )
 
-  makeObservable(defaultAsyncActions, annotations)
+  makeObservable(defaultAsyncActions, annotations as any)
 
   return defaultAsyncActions
 }
