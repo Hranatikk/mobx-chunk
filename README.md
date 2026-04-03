@@ -10,9 +10,10 @@ A lightweight, type-safe factory for building MobX-powered state slices ("chunks
 
 * **Automatic Actions & Selectors**: Generates `set${ValueKey}` actions and `get${ValueKey}` selectors for each state field.
 * **Async Actions & Loading Flags**: Define asynchronous flows with `store.asyncActions` and track them via `store.isLoading` flags.
+* **Queries & Mutations**: Built-in data fetching with per-argument caching, loading states, infinite pagination, and manual invalidation — similar to TanStack Query but powered by MobX.
 * **Type Safety**: Fully typed stores, actions, and selectors using TypeScript inference.
 * **Persistence**: Plug in any storage engine (MMKV, AsyncStorage, localStorage) to persist specific fields.
-* **React Integration**: React hooks (`useValues`, `useComputed`, `useChunk`) for seamless UI updates.
+* **React Integration**: React hooks (`useValues`, `useComputed`, `useChunk`, `useQuery`, `useInfiniteQuery`, `useMutation`) for seamless UI updates.
 
 ## Installation
 
@@ -104,6 +105,88 @@ const { todoList, isLoading } = useValues({
 const singleList = useComputed(
   () => todoStore.selectors.getTodoList
 );
+```
+
+## Queries & Mutations
+
+Define queries, mutations, and infinite queries directly in your chunk config. Each query caches results per arguments, tracks loading/error state, and supports manual invalidation.
+
+### Define Queries
+
+```ts
+import { createChunk } from "mobx-chunk";
+
+const usersStore = createChunk({
+  name: "users",
+  initialState: {},
+  queries: (self) => ({
+    fetchUsers: {
+      fn: async (page: number) => api.getUsers(page),
+      type: "query" as const,
+      cacheTime: 5000, // ms, default 30000
+    },
+    createUser: {
+      fn: async (name: string) => api.createUser(name),
+      type: "mutation" as const,
+    },
+    usersFeed: {
+      fn: async (cursor: number) => api.getUsersFeed(cursor),
+      type: "infiniteQuery" as const,
+      initialPageParam: 0,
+      getNextPageParam: (lastPage) => lastPage.nextCursor,
+    },
+  }),
+});
+```
+
+### Use in React
+
+```tsx
+import { useQuery, useMutation, useInfiniteQuery } from "mobx-chunk";
+
+// Paginated list — auto-fetches, caches per page
+const { data, isPending, refetch } = useQuery(usersStore.queries.fetchUsers, 1);
+
+// Mutation with loading state
+const { mutate, isPending } = useMutation(usersStore.queries.createUser);
+mutate("Alice");
+
+// Infinite scroll
+const { data, fetchNextPage, hasNextPage } = useInfiniteQuery(
+  usersStore.queries.usersFeed
+);
+```
+
+### Read State Without a Hook
+
+Inside MobX actions, views, or reactions — no hook needed:
+
+```ts
+const state = usersStore.queries.fetchUsers.getState(1);
+// state.data, state.isPending, state.isError, state.error, state.status
+
+const mutationState = usersStore.queries.createUser.state;
+// mutationState.data, mutationState.isPending
+```
+
+### Split Queries Across Files
+
+Use `combineQueries` (like `combineAsync`) when a chunk has many queries:
+
+```ts
+import { createChunk, combineQueries } from "mobx-chunk";
+import { userQueries } from "./queries/userQueries";
+import { postQueries } from "./queries/postQueries";
+
+const store = createChunk({
+  name: "app",
+  initialState: {},
+  queries: combineQueries({ users: userQueries, posts: postQueries }),
+});
+
+// All queries available at one level
+await store.queries.fetchUsers(1);
+await store.queries.createPost(1, "Hello");
 ```
 
 ## Persistence Setup

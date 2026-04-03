@@ -1,4 +1,5 @@
 import type { RecordWithAny, RecordWithAnyFn } from "./common"
+import type { QueriesRecord, ResolveQueries } from "./query"
 
 /**
  * Configuration for creating a MobX chunk (store).
@@ -7,18 +8,21 @@ import type { RecordWithAny, RecordWithAnyFn } from "./common"
  * @template TActions - Synchronous action methods.
  * @template TAsync - Asynchronous (generator) methods.
  * @template TSelectors - Computed view methods.
+ * @template TQueries - Query/mutation definitions.
  */
 export interface ChunkConfig<
   TState extends RecordWithAny,
   TActions extends RecordWithAnyFn = {},
   TAsync extends RecordWithAnyFn = {},
   TSelectors extends RecordWithAnyFn = {},
+  TQueries extends QueriesRecord = {},
 > {
   name: string
   initialState: TState
   actions?: (self: any) => TActions
   asyncActions?: (self: any) => TAsync
   views?: (self: any) => TSelectors
+  queries?: (self: any) => TQueries
   persist?: Array<keyof TState>
   /** Debounce delay (ms) for persistence writes. Defaults to 300. */
   persistDebounce?: number
@@ -34,12 +38,14 @@ export type StoreInstance<
   TActions extends RecordWithAnyFn,
   TAsync extends RecordWithAnyFn,
   TSelectors extends RecordWithAnyFn,
+  TQueries extends QueriesRecord = {},
 > = {
   actions: Actions<TState, TActions>
   asyncActions: TAsync
   dispose: () => void
   selectors: Selectors<TState, TSelectors>
   isLoading: Record<keyof TAsync, boolean>
+  queries: ResolveQueries<TQueries>
 }
 
 type Actions<S extends RecordWithAny, T> = T & {
