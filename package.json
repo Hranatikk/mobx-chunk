@@ -1,6 +1,6 @@
 {
     "name": "mobx-chunk",
-    "version": "1.3.0",
+    "version": "2.0.1",
     "description": "Composable MobX store factory and React hooks",
     "main": "dist/index.cjs.js",
     "module": "dist/index.esm.js",
