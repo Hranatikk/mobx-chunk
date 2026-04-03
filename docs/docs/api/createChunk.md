@@ -49,6 +49,11 @@ interface CreateChunkOptions<
   persist?: Array<keyof State & string>;
 
   /**
+   * Debounce delay (ms) for persistence writes. Defaults to 300.
+   */
+  persistDebounce?: number;
+
+  /**
    * Function returning an object of synchronous actions.
    */
   actions?: (store: State) => Actions;

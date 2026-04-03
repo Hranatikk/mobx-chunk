@@ -130,18 +130,39 @@ Supports synchronous or asynchronous APIs (e.g., AsyncStorage or browser localSt
 Add global interceptors for validation, logging, or metrics:
 
 ```ts
-import { addActionInterceptor } from "mobx-chunk";
+import { addActionInterceptor, removeActionInterceptor } from "mobx-chunk";
 
-addActionInterceptor((ctx, next) => {
-  // ctx.chunkName, ctx.actionName, ctx.args
-  if (ctx.actionName === "yourAction") {
-    // validate or log
-  }
+const logger = (ctx, next) => {
+  console.log(`[${ctx.chunkName}] ${ctx.actionName}`, ctx.args);
   return next();
-});
+};
+
+// Register
+addActionInterceptor(logger);
+
+// Unregister when no longer needed
+removeActionInterceptor(logger);
 ```
 
 > **Coming Soon:** Separate interceptors for general actions, async actions, and sync actions.
+
+## `selectorFn`
+
+Mark view functions as parameterized methods when they use rest/default params (which report `fn.length === 0`):
+
+```ts
+import { createChunk, selectorFn } from "mobx-chunk";
+
+const store = createChunk({
+  name: "items",
+  initialState: { items: [] },
+  views: (self) => ({
+    filteredItems: selectorFn((...tags: string[]) =>
+      self.items.filter((i) => tags.includes(i.tag))
+    ),
+  }),
+});
+```
 
 ## License
 

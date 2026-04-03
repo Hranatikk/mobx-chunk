@@ -3,9 +3,11 @@ sidebar_position: 8
 ---
 
 
-# API: `addActionInterceptor`
+# API: `addActionInterceptor` / `removeActionInterceptor`
 
-Register a global middleware function that intercepts chunk actions and async actions. Useful for validation, logging, or performance tracking.
+Register (and unregister) global middleware functions that intercept chunk async actions. Useful for validation, logging, or performance tracking.
+
+## `addActionInterceptor`
 
 ```ts
 function addActionInterceptor(
@@ -15,6 +17,23 @@ function addActionInterceptor(
   ) => any
 ): void
 ```
+
+Registers an interceptor that will be called before every async action.
+
+## `removeActionInterceptor`
+
+```ts
+function removeActionInterceptor(
+  interceptor: (
+    ctx: ActionContext,
+    next: () => any
+  ) => any
+): boolean
+```
+
+Removes a previously registered interceptor. Returns `true` if the interceptor was found and removed, `false` otherwise.
+
+> **Tip:** Keep a reference to the interceptor function so you can remove it later.
 
 ## `ActionContext` Interface
 
@@ -47,20 +66,19 @@ interface ActionContext {
 
 ## Behavior
 
-1. **Registration**: Call once at app startup. Interceptors apply globally in registration order.
-2. **Interception**: For each action or async action invocation, all registered interceptors run sequentially.
-3. **Chaining**: Each interceptor calls `next()` to pass control to the next interceptor or final action.
-4. **Error Handling**: Throwing inside an interceptor stops further interceptors and prevents the action from running.
-
-> **Note:** Currently, interceptors apply to async actions. In the next release, support will expand to include separate interceptor types for sync actions, async actions, and general actions.
+1. **Registration**: Call `addActionInterceptor` at app startup. Interceptors apply globally in registration order.
+2. **Removal**: Call `removeActionInterceptor` with the same function reference to unregister it.
+3. **Interception**: For each async action invocation, all registered interceptors run sequentially.
+4. **Chaining**: Each interceptor calls `next()` to pass control to the next interceptor or final action.
+5. **Error Handling**: Throwing inside an interceptor stops further interceptors and prevents the action from running.
 
 ## Example
 
 ```ts
-import { addActionInterceptor } from "mobx-chunk";
+import { addActionInterceptor, removeActionInterceptor } from "mobx-chunk";
 
-// Validate that payload has an 'email' field when calling 'createUser'
-addActionInterceptor((ctx, next) => {
+// Define the interceptor
+const validateEmail = (ctx, next) => {
   if (ctx.actionName === "createUser") {
     const [payload] = ctx.args;
     if (!payload || typeof payload.email !== "string") {
@@ -69,9 +87,14 @@ addActionInterceptor((ctx, next) => {
       );
     }
   }
-  // Continue to next interceptor or actual action
   return next();
-});
+};
+
+// Register
+addActionInterceptor(validateEmail);
+
+// Later, unregister when no longer needed
+removeActionInterceptor(validateEmail);
 ```
 
-Use `addActionInterceptor` to enforce data integrity, log user interactions, or measure performance across your mobx-chunk stores.
+Use `addActionInterceptor` to enforce data integrity, log user interactions, or measure performance across your mobx-chunk stores. Use `removeActionInterceptor` to clean up interceptors that are no longer needed.
