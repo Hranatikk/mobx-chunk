@@ -1,9 +1,11 @@
 import type { IReactionDisposer } from "mobx"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
 import type { RecordWithAny, RecordWithAnyFn } from "../types/common"
+import type { QueriesRecord } from "../types/query"
 import { createActions } from "./createActions"
 import { createAsyncActions } from "./createAsyncActions"
 import { createLoadingAnnotations } from "./createLoadingAnnotations"
+import { createQueries, disposeQueries } from "./createQueries"
 import { createSelectors } from "./createSelectors"
 import { createStateAnnotations } from "./createStateAnnotations"
 import { setupPersistence } from "./persist"
@@ -28,16 +30,18 @@ export function createChunk<
   TActions extends RecordWithAnyFn = {},
   TAsync extends RecordWithAnyFn = {},
   TSelectors extends RecordWithAnyFn = {},
+  TQueries extends QueriesRecord = {},
 >(
-  config: ChunkConfig<TState, TActions, TAsync, TSelectors>
-): StoreInstance<TState, TActions, TAsync, TSelectors> {
+  config: ChunkConfig<TState, TActions, TAsync, TSelectors, TQueries>
+): StoreInstance<TState, TActions, TAsync, TSelectors, TQueries> {
   class Store {
     constructor() {
       const self = this as unknown as StoreInstance<
         TState,
         TActions,
         TAsync,
-        TSelectors
+        TSelectors,
+        TQueries
       >
 
       const count = chunkNameRegistry.get(config.name) ?? 0
@@ -96,6 +100,17 @@ export function createChunk<
         writable: true,
       })
 
+      /**
+       * Create queries/mutations
+       */
+      const queries = createQueries(self, config.queries)
+      Object.defineProperty(self, "queries", {
+        configurable: true,
+        enumerable: false,
+        value: queries ?? {},
+        writable: true,
+      })
+
       rehydrateChunkState(config, self as any)
 
       /**
@@ -111,6 +126,8 @@ export function createChunk<
         value: () => {
           if (disposed) return
           disposed = true
+
+          disposeQueries(queries)
 
           const remaining = (chunkNameRegistry.get(config.name) ?? 1) - 1
           if (remaining <= 0) {
@@ -133,5 +150,5 @@ export function createChunk<
     }
   }
 
-  return new Store() as StoreInstance<TState, TActions, TAsync, TSelectors>
+  return new Store() as StoreInstance<TState, TActions, TAsync, TSelectors, TQueries>
 }

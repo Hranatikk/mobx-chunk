@@ -30,7 +30,8 @@ const count = useComputed(() => counterStore.selectors.getCount);
 
 ## Behavior
 
-* Subscribes to the provided selector in one hook.
+* Uses `useSyncExternalStore` under the hood, preventing tearing in React concurrent mode.
+* Subscribes to the provided selector via a MobX `reaction`.
 * Triggers a re-render when the selected value changes.
 * Unsubscribes automatically when the component unmounts.
 

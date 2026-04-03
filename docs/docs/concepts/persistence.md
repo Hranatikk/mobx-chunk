@@ -93,4 +93,21 @@ const App = () => (
 export default App;
 ```
 
+## Debounce Control
+
+By default, persistence writes are debounced by **300 ms** to avoid excessive storage operations. You can customize this per chunk with `persistDebounce`:
+
+```ts
+export const store = createChunk({
+  name: "settings",
+  initialState: { theme: "light" },
+  persist: ["theme"],
+  persistDebounce: 500, // write at most once every 500ms
+});
+```
+
+Set `persistDebounce: 0` for immediate writes, or increase the value for stores that update very frequently.
+
+---
+
 With the engine configured, any chunk using the `persist` option will automatically read and write state to your chosen storage backend.
