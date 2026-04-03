@@ -33,7 +33,8 @@ const values = useValues({
 
 ## Behavior
 
-* Subscribes to all provided selectors in a single hook.
+* Uses `useSyncExternalStore` under the hood, preventing tearing in React concurrent mode.
+* Subscribes to all provided selectors in a single hook via a MobX `reaction`.
 * Batches updates: your component will re-render once even if multiple values change.
 * Unsubscribes automatically on unmount.
 

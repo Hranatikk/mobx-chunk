@@ -22,9 +22,8 @@ function useStoreInitialized(
 
 ## Behavior
 
-1. On component mount, the hook iterates through the `storeInstances` array to reference each store (triggering any creation or side effects).
-2. After all stores have been referenced, it sets `isInitialized` to `true`.
-3. The hook then causes a re-render of the consumer component so that UI can proceed once stores are ready.
+1. On component mount, the hook sets `isInitialized` to `true` inside a `useEffect`.
+2. The hook then causes a re-render of the consumer component so that UI can proceed once stores are ready.
 
 ## Example
 

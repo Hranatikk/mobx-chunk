@@ -18,7 +18,7 @@ sidebar_position: 4
 
 ## Adding an Interceptor
 
-Import and call `addActionInterceptor` at your app’s root (e.g., entry point) before any actions run:
+Import and call `addActionInterceptor` at your app's root (e.g., entry point) before any actions run:
 
 ```ts
 import React from "react";
@@ -57,6 +57,25 @@ const App = () => (
 export default App;
 ```
 
+## Removing an Interceptor
+
+To unregister a previously added interceptor, use `removeActionInterceptor` with the same function reference:
+
+```ts
+import { addActionInterceptor, removeActionInterceptor } from "mobx-chunk";
+
+const logger = (ctx, next) => {
+  console.log(`[${ctx.chunkName}] ${ctx.actionName}`, ctx.args);
+  return next();
+};
+
+// Register
+addActionInterceptor(logger);
+
+// Later, when no longer needed
+removeActionInterceptor(logger); // returns true if found
+```
+
 ## Interceptor Context (`ctx`)
 
 | Property         | Description                             |
@@ -67,9 +86,10 @@ export default App;
 
 ## Interceptor Flow
 
-1. **Registration**: Call `addActionInterceptor` once at startup.
-2. **Execution**: For each matching action, interceptors run in order of registration.
-3. **Chaining**: Each interceptor must call `next()` to continue the chain.
-4. **Error Handling**: Throwing inside an interceptor halts the chain and prevents the action.
+1. **Registration**: Call `addActionInterceptor` at startup.
+2. **Removal**: Call `removeActionInterceptor` with the same function reference to unregister.
+3. **Execution**: For each matching action, interceptors run in order of registration.
+4. **Chaining**: Each interceptor must call `next()` to continue the chain.
+5. **Error Handling**: Throwing inside an interceptor halts the chain and prevents the action.
 
 With middleware in place, you can enforce rules, log events, and monitor performance across your mobx-chunk stores.
