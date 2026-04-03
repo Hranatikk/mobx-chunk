@@ -3,6 +3,11 @@ import { reaction } from "mobx"
 import { getPersistenceEngine } from "../adapters/storageAdapter"
 import type { ChunkConfig } from "../types/chunk"
 
+interface Hydratable {
+  __hydrated: boolean
+  [key: string]: unknown
+}
+
 /**
  * Setup persistence for specified state keys in a chunk config.
  * Uses the globally configured PersistenceEngine, supporting async operations.
@@ -19,10 +24,12 @@ export function setupPersistence<Self extends object>(
   const engine = getPersistenceEngine()
   if (!engine) return null
 
+  const target = self as unknown as Hydratable
+
   const disposer = reaction(
-    () => config.persist!.map((k) => (self as any)[k]),
+    () => config.persist!.map((k) => target[k as string]),
     (vals) => {
-      if (!(self as any).__hydrated) return
+      if (!target.__hydrated) return
 
       const toSave: Record<string, string> = {}
       config.persist!.forEach((k, i) => {
@@ -36,7 +43,7 @@ export function setupPersistence<Self extends object>(
         })
       }
     },
-    { delay: 300, fireImmediately: true }
+    { delay: config.persistDebounce ?? 300, fireImmediately: true }
   )
 
   return disposer

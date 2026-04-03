@@ -40,6 +40,21 @@ export function addActionInterceptor(interceptor: ActionInterceptor) {
 }
 
 /**
+ * Remove a previously registered action interceptor.
+ *
+ * @param interceptor - The interceptor reference to remove.
+ * @returns `true` if the interceptor was found and removed, `false` otherwise.
+ */
+export function removeActionInterceptor(
+  interceptor: ActionInterceptor
+): boolean {
+  const idx = interceptors.indexOf(interceptor)
+  if (idx === -1) return false
+  interceptors.splice(idx, 1)
+  return true
+}
+
+/**
  * Clear all registered action interceptors.
  */
 export function clearActionInterceptors() {

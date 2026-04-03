@@ -15,7 +15,7 @@ export default [
     },
     plugins: [
       typescript({ useTsconfigDeclarationDir: true }),
-      terser()
+      terser({ maxWorkers: 1 })
     ]
   },
   // CommonJS
@@ -30,7 +30,7 @@ export default [
     },
     plugins: [
       typescript(),
-      terser()
+      terser({ maxWorkers: 1 })
     ]
   }
 ]

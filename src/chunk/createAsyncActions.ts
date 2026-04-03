@@ -1,4 +1,4 @@
-import { flow, makeObservable, runInAction } from "mobx"
+import { flow, runInAction } from "mobx"
 import { runActionInterceptors } from "../adapters/middlewareAdapter"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
 import type { AnyFn, RecordWithAnyFn } from "../types/common"
@@ -32,10 +32,6 @@ export function createAsyncActions<
         | Record<string, number>
         | undefined
 
-      runActionInterceptors(
-        { actionName: name, args, chunkName: config.name, store: self },
-        () => {}
-      )
       if (counters) {
         runInAction(() => {
           counters[name] = (counters[name] ?? 0) + 1
@@ -66,12 +62,6 @@ export function createAsyncActions<
       writable: true,
     })
   })
-
-  const annotations = Object.fromEntries(
-    Object.keys(defaultAsyncActions).map((n) => [n, flow])
-  )
-
-  makeObservable(defaultAsyncActions, annotations as any)
 
   return defaultAsyncActions
 }

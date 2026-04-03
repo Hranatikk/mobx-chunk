@@ -2,6 +2,11 @@ import { runInAction } from "mobx"
 import { getPersistenceEngine } from "../adapters/storageAdapter"
 import type { ChunkConfig } from "../types/chunk"
 
+interface Hydratable {
+  __hydrated: boolean
+  [key: string]: unknown
+}
+
 /**
  * Rehydrate a store's state from the configured persistence engine.
  * Supports both sync and async get() implementations.
@@ -13,9 +18,11 @@ export function rehydrateChunkState<Self extends object>(
   config: ChunkConfig<Self, any, any, any>,
   self: Self
 ) {
+  const target = self as unknown as Hydratable
+
   try {
-    if (!(self as any).__hydrated) {
-      Object.defineProperty(self as any, "__hydrated", {
+    if (!target.__hydrated) {
+      Object.defineProperty(target, "__hydrated", {
         configurable: true,
         enumerable: false,
         value: false,
@@ -31,11 +38,20 @@ export function rehydrateChunkState<Self extends object>(
     const rawOrPromise = engine.get(`${config.name}Store`)
 
     const hydrate = (raw: string | null) => {
-      if (!raw) return
+      if (!raw) {
+        runInAction(() => {
+          target.__hydrated = true
+        })
+        return
+      }
+
       let storeObj: Record<string, string>
       try {
         storeObj = JSON.parse(raw)
       } catch {
+        runInAction(() => {
+          target.__hydrated = true
+        })
         return
       }
 
@@ -44,11 +60,12 @@ export function rehydrateChunkState<Self extends object>(
           if (!config.persist?.includes(key as keyof Self)) return
 
           try {
-            ;(self as any)[key] = JSON.parse(val)
+            target[key] = JSON.parse(val)
           } catch {
-            ;(self as any)[key] = val
+            target[key] = val
           }
         })
+        target.__hydrated = true
       })
     }
 
@@ -56,18 +73,20 @@ export function rehydrateChunkState<Self extends object>(
       rawOrPromise
         .then((raw) => {
           hydrate(raw)
-          ;(self as any).__hydrated = true
         })
         .catch((err) => {
           console.error(`Hydration error for chunk '${config.name}Store':`, err)
-          ;(self as any).__hydrated = true
+          runInAction(() => {
+            target.__hydrated = true
+          })
         })
     } else {
       hydrate(rawOrPromise as string)
-      ;(self as any).__hydrated = true
     }
   } catch (err) {
     console.error(`Hydration error ${err}`)
-    ;(self as any).__hydrated = true
+    runInAction(() => {
+      target.__hydrated = true
+    })
   }
 }

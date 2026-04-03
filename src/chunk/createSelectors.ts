@@ -2,6 +2,7 @@ import { computed, makeObservable } from "mobx"
 import type { ChunkConfig } from "../types/chunk"
 import type { AnyFn } from "../types/common"
 import { capitalize } from "../utils/capitalize"
+import { isSelectorMethod } from "../utils/selectorFn"
 
 /**
  * Create selectors object with:
@@ -36,7 +37,7 @@ export function createSelectors<
 
   if (customSelectors) {
     Object.entries(customSelectors).forEach(([name, fn]) => {
-      if (fn.length <= 0) {
+      if (!isSelectorMethod(fn) && fn.length <= 0) {
         Object.defineProperty(selectors, name, {
           configurable: true,
           enumerable: false,

@@ -21,33 +21,33 @@ export function createLoadingAnnotations<
   const async = (config.asyncActions?.(self) ?? {}) as RecordWithAnyFn
   const names = Object.keys(async) as Array<keyof TAsync>
 
-  const counters = Object.fromEntries(
+  const counters: Record<string, number> = Object.fromEntries(
     names.map((n) => [n as string, 0])
-  ) as Record<keyof TAsync, number>
+  )
 
-  const counterAnn = Object.fromEntries(
+  const counterAnn: Record<string, IObservableFactory> = Object.fromEntries(
     names.map((n) => [n as string, observable as IObservableFactory])
-  ) as unknown as AnnotationsMap<typeof counters, never>
+  )
 
-  makeObservable(counters as any, counterAnn)
+  makeObservable(counters, counterAnn as AnnotationsMap<typeof counters, never>)
 
-  const isLoading = {} as Record<keyof TAsync, boolean>
+  const isLoading: Record<string, boolean> = {}
 
   names.forEach((n) => {
     Object.defineProperty(isLoading, n, {
       configurable: true,
       enumerable: true,
       get() {
-        return (counters as any)[n] > 0
+        return counters[n as string] > 0
       },
     })
   })
 
-  const loadingAnn = Object.fromEntries(
+  const loadingAnn: Record<string, typeof computed> = Object.fromEntries(
     names.map((n) => [n as string, computed])
-  ) as unknown as AnnotationsMap<typeof isLoading, never>
+  )
 
-  makeObservable(isLoading as any, loadingAnn)
+  makeObservable(isLoading, loadingAnn as AnnotationsMap<typeof isLoading, never>)
 
   Object.defineProperty(self as any, "__loadingCounters", {
     configurable: true,

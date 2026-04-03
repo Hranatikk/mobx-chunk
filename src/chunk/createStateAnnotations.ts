@@ -16,7 +16,7 @@ export function createStateAnnotations<
   self: Self,
   config: ChunkConfig<TState, any, any, any>
 ): Record<string, unknown> {
-  const annotations: Record<string, any> = {}
+  const annotations: Record<string, typeof observable> = {}
   const stateKeys = Object.keys(config.initialState) as Array<keyof TState>
 
   stateKeys.forEach((key) => {
