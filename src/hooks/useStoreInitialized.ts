@@ -2,21 +2,18 @@ import { useEffect, useState } from "react"
 import type { StoreInstance } from "../types/chunk"
 
 /**
- * Invokes each store factory when the component mounts
- * and sets `isInitialized` to true after the first execution.
+ * Returns `true` after the component mounts, signaling that the
+ * provided store instances are ready to be used.
  *
- * @param storeInstances - store instances
+ * @param _storeInstances - store instances (kept for API compatibility)
  * @returns isInitialized - false until the effect runs, then true
  */
 export function useStoreInitialized(
-  storeInstances: StoreInstance<{}, {}, {}, {}>[]
+  _storeInstances: StoreInstance<{}, {}, {}, {}>[]
 ): boolean {
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    storeInstances.forEach((store) => {
-      store
-    })
     setIsInitialized(true)
   }, [])
 

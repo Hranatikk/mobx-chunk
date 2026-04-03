@@ -1,8 +1,10 @@
-import { useEffect, useState } from "react"
+import { useCallback, useRef, useSyncExternalStore } from "react"
 import { reaction } from "mobx"
 
 /**
  * React hook to subscribe to MobX store values or getters.
+ * Uses `useSyncExternalStore` to prevent tearing in React concurrent mode.
+ *
  * It returns an object of the same shape as the input getters,
  * automatically unwrapping getter functions to their return values.
  *
@@ -18,32 +20,33 @@ export function useValues<G extends Record<string, (() => any) | any>>(
 ): { [K in keyof G]: G[K] extends () => infer R ? R : G[K] } {
   type Values = { [K in keyof G]: G[K] extends () => infer R ? R : G[K] }
 
-  const [values, setValues] = useState<Values>(
-    () =>
-      Object.fromEntries(
-        Object.entries(getters).map(([key, getter]) => [
-          key,
-          typeof getter === "function" ? (getter as () => any)() : getter,
-        ])
-      ) as Values
-  )
+  const gettersRef = useRef(getters)
+  gettersRef.current = getters
 
-  useEffect(() => {
-    const disposer = reaction<Values>(
-      () =>
-        Object.fromEntries(
-          Object.entries(getters).map(([key, getter]) => [
-            key,
-            typeof getter === "function" ? (getter as () => any)() : getter,
-          ])
-        ) as Values,
-      (current) => {
-        setValues(current)
-      }
-    )
+  const resolve = () =>
+    Object.fromEntries(
+      Object.entries(gettersRef.current).map(([key, getter]) => [
+        key,
+        typeof getter === "function" ? (getter as () => any)() : getter,
+      ])
+    ) as Values
 
-    return () => disposer()
-  }, [getters])
+  const snapshotRef = useRef<Values>(null!)
+  const initRef = useRef(false)
+  if (!initRef.current) {
+    snapshotRef.current = resolve()
+    initRef.current = true
+  }
 
-  return values
+  const subscribe = useCallback((onStoreChange: () => void) => {
+    const disposer = reaction<Values>(resolve, (current) => {
+      snapshotRef.current = current
+      onStoreChange()
+    })
+    return disposer
+  }, [])
+
+  const getSnapshot = useCallback(() => snapshotRef.current, [])
+
+  return useSyncExternalStore(subscribe, getSnapshot)
 }

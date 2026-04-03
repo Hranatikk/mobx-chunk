@@ -46,7 +46,7 @@ export function combineAsync<T extends Record<string, (self: any) => any>>(
 ): (self: any) => Combined<T> {
   return (self) =>
     Object.assign(
-      {} as T,
+      {} as Record<string, any>,
       ...Object.values(factories).map((fn) => fn(self as any))
-    )
+    ) as Combined<T>
 }

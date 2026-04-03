@@ -20,6 +20,8 @@ export interface ChunkConfig<
   asyncActions?: (self: any) => TAsync
   views?: (self: any) => TSelectors
   persist?: Array<keyof TState>
+  /** Debounce delay (ms) for persistence writes. Defaults to 300. */
+  persistDebounce?: number
 }
 
 /**

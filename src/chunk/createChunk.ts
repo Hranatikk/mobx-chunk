@@ -9,6 +9,8 @@ import { createStateAnnotations } from "./createStateAnnotations"
 import { setupPersistence } from "./persist"
 import { rehydrateChunkState } from "./rehydration"
 
+const chunkNameRegistry = new Map<string, number>()
+
 /**
  * Factory function to create a MobX store (chunk) based on the provided configuration.
  * It hydrates persisted state (sync or async) and sets up subsequent persistence.
@@ -38,9 +40,15 @@ export function createChunk<
         TSelectors
       >
 
-      /**
-       * Generate default state
-       */
+      const count = chunkNameRegistry.get(config.name) ?? 0
+      chunkNameRegistry.set(config.name, count + 1)
+      if (count > 0 && config.persist?.length) {
+        console.warn(
+          `[mobx-chunk] Duplicate chunk name "${config.name}" with persistence enabled. ` +
+            `Multiple chunks will share the same storage key "${config.name}Store" and overwrite each other's data.`
+        )
+      }
+
       Object.assign(self, config.initialState)
       createStateAnnotations(self, config)
 
@@ -103,10 +111,22 @@ export function createChunk<
         value: () => {
           if (disposed) return
           disposed = true
+
+          const remaining = (chunkNameRegistry.get(config.name) ?? 1) - 1
+          if (remaining <= 0) {
+            chunkNameRegistry.delete(config.name)
+          } else {
+            chunkNameRegistry.set(config.name, remaining)
+          }
+
           while (disposers.length) {
             try {
               disposers.pop()!()
-            } catch {}
+            } catch (err) {
+              if (process.env.NODE_ENV !== "production") {
+                console.warn(`[mobx-chunk] Error disposing chunk "${config.name}":`, err)
+              }
+            }
           }
         },
       })

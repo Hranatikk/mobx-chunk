@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react"
-import { createChunk } from "../"
+import { createChunk } from "../chunk/createChunk"
 import type { ChunkConfig, StoreInstance } from "../types/chunk"
 
 type CreatedStore<
@@ -57,10 +57,18 @@ export function useChunk<
     return () => {
       try {
         onDispose?.(store)
-      } catch {}
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[mobx-chunk] Error in onDispose callback:", err)
+        }
+      }
       try {
         store.dispose?.()
-      } catch {}
+      } catch (err) {
+        if (process.env.NODE_ENV !== "production") {
+          console.warn("[mobx-chunk] Error disposing store:", err)
+        }
+      }
     }
   }, [])
 
